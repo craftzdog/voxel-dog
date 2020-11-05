@@ -128,6 +128,8 @@ function animate() {
 
   controls.update()
 
+  dog.rotation.y += 0.01
+
   frame += 0.001
   const r = 20
   camera.position.y = 20
