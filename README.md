@@ -2,6 +2,8 @@
 
 A 3D dog model rendered with three.js for reproducing the MagicaVoxel's soft shadows.
 
+- [Check out the demo](https://voxel-dog.netlify.app/)
+
 This project includes 3 rendering examples.
 
 ## 1. Wavefront OBJ
