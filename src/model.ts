@@ -4,11 +4,17 @@ import { MTLLoader } from 'three/examples/jsm/loaders/MTLLoader.js'
 import { MtlObjBridge } from 'three/examples/jsm/loaders/obj2/bridge/MtlObjBridge.js'
 import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader'
 
-export function loadModel(
+export function loadObjModel(
   scene: THREE.Scene,
   mtlPath: string,
-  objPath: string
+  objPath: string,
+  options: {
+    smooth: boolean
+    receiveShadow: boolean
+    castShadow: boolean
+  } = { smooth: false, receiveShadow: true, castShadow: true }
 ): Promise<THREE.Object3D> {
+  const { smooth, receiveShadow, castShadow } = options
   return new Promise(resolve => {
     const mtlLoader = new MTLLoader()
     mtlLoader.load(mtlPath, mtlParseResult => {
@@ -19,33 +25,28 @@ export function loadModel(
         console.log(`${objPath}:`, obj)
         obj.position.y = 0
         obj.position.x = 3.5
-        obj.receiveShadow = true
-        obj.castShadow = true
-        // obj.scale.set(1.4, 1.4, 1.4)
+        obj.receiveShadow = receiveShadow
+        obj.castShadow = castShadow
         scene.add(obj)
 
         obj.traverse(function (child: THREE.Mesh) {
           if (child.isMesh) {
             console.log('mesh child:', child)
-            child.castShadow = true
-            child.receiveShadow = true
-            child.material.flatShading = false
-            child.material.needsUpdate = true
-            if (child.material.map) child.material.map.anisotropy = 16
+            child.castShadow = castShadow
+            child.receiveShadow = receiveShadow
             console.log('child.geometry:', child.geometry)
-            child.geometry.computeVertexNormals(true)
 
-            /*
-            // smooth shading
-            const tempGeometry = new THREE.Geometry().fromBufferGeometry(
-              child.geometry
-            )
-            tempGeometry.mergeVertices()
-            tempGeometry.computeVertexNormals()
-            child.geometry = new THREE.BufferGeometry().fromGeometry(
-              tempGeometry
-            )
-            */
+            if (smooth && child.geometry instanceof THREE.BufferGeometry) {
+              // smooth shading
+              const tempGeometry = new THREE.Geometry().fromBufferGeometry(
+                child.geometry
+              )
+              tempGeometry.mergeVertices()
+              tempGeometry.computeVertexNormals()
+              child.geometry = new THREE.BufferGeometry().fromGeometry(
+                tempGeometry
+              )
+            }
           }
         })
 
@@ -57,8 +58,13 @@ export function loadModel(
 
 export function loadGLTFModel(
   scene: THREE.Scene,
-  glbPath: string
+  glbPath: string,
+  options: {
+    receiveShadow: boolean
+    castShadow: boolean
+  } = { receiveShadow: true, castShadow: true }
 ): Promise<THREE.Object3D> {
+  const { receiveShadow, castShadow } = options
   return new Promise((resolve, reject) => {
     const loader = new GLTFLoader()
 
@@ -70,25 +76,23 @@ export function loadGLTFModel(
         obj.name = 'dog'
         obj.position.y = 0
         obj.position.x = 0
-        obj.receiveShadow = true
-        obj.castShadow = true
-        // obj.scale.set(0.4, 0.4, 0.4)
+        obj.receiveShadow = receiveShadow
+        obj.castShadow = castShadow
         scene.add(obj)
 
         console.log('model:', obj)
 
         obj.traverse(function (child: THREE.Mesh) {
           if (child.isMesh) {
-            console.log('mesh child:', child)
-            child.castShadow = true
-            child.receiveShadow = true
+            child.castShadow = castShadow
+            child.receiveShadow = receiveShadow
           }
         })
         resolve(obj)
       },
+      undefined,
       function (error) {
-        console.log('An error happened')
-        console.log(error)
+        console.error('An error happened:', error)
         reject(error)
       }
     )
