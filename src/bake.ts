@@ -9,25 +9,33 @@ let camera: THREE.PerspectiveCamera
 let scene: THREE.Scene
 let renderer: THREE.WebGLRenderer
 let controls: OrbitControls
+let target: THREE.Vector3
+let frame = 0
+let initialCameraPosition: THREE.Vector3
 
 init()
 animate()
 
 function init() {
   const container = document.createElement('div')
+  container.style.width = '300px'
+  container.style.height = '300px'
   document.body.appendChild(container)
 
+  target = new THREE.Vector3(-0.5, 1.2, 0)
+  initialCameraPosition = new THREE.Vector3(
+    20 * Math.sin(0.2 * Math.PI),
+    10,
+    20 * Math.cos(0.2 * Math.PI)
+  )
   camera = new THREE.PerspectiveCamera(
     30,
-    window.innerWidth / window.innerHeight,
+    container.clientWidth / container.clientHeight,
     0.01,
     50000
   )
-  camera.position.y = 20
-  camera.position.x = 20 * Math.sin(0.2 * Math.PI)
-  camera.position.z = 20 * Math.cos(0.2 * Math.PI)
-  camera.lookAt(new THREE.Vector3(0, 0, 0))
-  console.log('camera:', camera)
+  camera.position.copy(initialCameraPosition)
+  camera.lookAt(target)
 
   scene = new THREE.Scene()
 
@@ -36,17 +44,18 @@ function init() {
 
   renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true })
   renderer.setPixelRatio(window.devicePixelRatio)
-  renderer.setSize(window.innerWidth, window.innerHeight)
+  renderer.setSize(container.clientWidth, container.clientHeight)
   renderer.outputEncoding = THREE.sRGBEncoding
   renderer.shadowMap.enabled = true
   container.appendChild(renderer.domElement)
 
   // helpers
-  const axesHelper = new THREE.AxesHelper(500)
-  // scene.add(axesHelper)
   stats = Stats()
   container.appendChild(stats.dom)
+
   controls = new OrbitControls(camera, renderer.domElement)
+  controls.autoRotate = true
+  controls.target = target
 
   loadGLTFModel(scene, 'dog-baked.glb', {
     receiveShadow: false,
@@ -57,8 +66,22 @@ function init() {
 function animate() {
   requestAnimationFrame(animate)
 
+  frame = frame <= 100 ? frame + 1 : frame
+
+  if (frame <= 100) {
+    const invF = 100 - frame
+    const p = initialCameraPosition
+    const rotSpeed = (invF * invF) / 300
+
+    camera.position.y = 10
+    camera.position.x = p.x * Math.cos(rotSpeed) + p.z * Math.sin(rotSpeed)
+    camera.position.z = p.z * Math.cos(rotSpeed) - p.x * Math.sin(rotSpeed)
+    camera.lookAt(target)
+  } else {
+    controls.update()
+  }
+
   stats.update()
-  controls.update()
 
   renderer.render(scene, camera)
 }
