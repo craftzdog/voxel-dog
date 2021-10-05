@@ -5,7 +5,7 @@ import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls'
 import { loadGLTFModel } from './model'
 
 let stats: Stats
-let camera: THREE.PerspectiveCamera
+let camera: THREE.OrthographicCamera
 let scene: THREE.Scene
 let renderer: THREE.WebGLRenderer
 let controls: OrbitControls
@@ -28,12 +28,15 @@ function init() {
     10,
     20 * Math.cos(0.2 * Math.PI)
   )
+  /*
   camera = new THREE.PerspectiveCamera(
     30,
     container.clientWidth / container.clientHeight,
     0.01,
     50000
   )
+  */
+  camera = new THREE.OrthographicCamera(-6, 6, 6, -6, 0.01, 50000)
   camera.position.copy(initialCameraPosition)
   camera.lookAt(target)
 
